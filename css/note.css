@@ -1,0 +1,34 @@
+@charset "utf-8";
+/* CSS Document */
+
+*{margin:0; padding:0;}
+body{font-family:'微软雅黑',Helvetica, Arial, sans-serif; font-size:12px; background:#fff; overflow-y:hidden;}
+.cb{clear:both;}
+img{border:none;}
+ul{list-style:none;}
+/* 头部 */
+.top{height:30px; position:relative; z-index:1; background:#2E7044; letter-spacing:1px;color:#fff;}
+.top a{font-weight:bold; font-size:12px; color:#fff; text-decoration:none;}
+.top_name,.exit{ float:right; padding-right:15px;line-height:30px; }
+
+/* 内容 */
+.content{padding-top:30px; }
+.left,.right{ position:absolute; top:0; right:0px; bottom:0px; }
+/* 左边 */
+.note_class:hover,.note_list:hover{background:#eff1ef;}
+.left{width:360px; left:0px; border-right:1px solid #B3B3B3;  border-left:1px solid #B3B3B3; margin-top:30px;}
+.left h3{ border-bottom:1px solid #B3B3B3; line-height:29px;padding-left:10px;}
+a.new_note{display:block; float:right; font-size:12px; color:#000; text-decoration:none; background:url(../images/new_note_bg.png); border:1px solid #cfcece; border-radius:5px;line-height:20px; padding:0 10px; margin:3px 10px;}
+a.new_note:hover{background:#e0f0e4;}
+.note_list_all{overflow-y:auto; position:absolute; right:0; top:30px; bottom:0;left:0;}
+.note_list{padding:10px; cursor:pointer; border-bottom:1px solid #cfcece; }
+.note_list h2{font-size:14px;}
+.note_list p{height:70px; overflow:hidden;}
+.this,.this:hover{background:#e2f2f8;}
+/* 右边 */
+.right{left:360px;  margin-top:30px;}
+.edit{ padding:10px; overflow-y:auto; position:absolute; right:0; top:60px; bottom:0;left:0;}
+.button_bar{border-bottom:1px solid #B3B3B3;height:30px;line-height:30px;padding-left:10px;}
+.note_title{border-bottom:1px solid #B3B3B3;height:30px;line-height:30px;padding-left:10px;}
+
+
