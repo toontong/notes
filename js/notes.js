@@ -16,7 +16,7 @@ var DisplayView = {reading:0x1, editing:0x2, creating:0x3, saving:0x4,
 function on_http_status_not_200(response){
     if (response.status == 403){
         console.log(response);
-        return show_login_dialog();
+        return DISPLAY.display_login_dialog();
     }
     console.error(response.status);
     console.error(response.body);
@@ -167,11 +167,12 @@ function Display(behavior){
         var history = div.attr("history").split(";");
         $("#history_list").empty();
         var tmpl = '<li><a href="#" onclick="get_history(\'{0}\',\'{1}\')">{2}</a></li>';
-        $("#history_list").append(tmpl.format(divid, div.attr("objkey"), "最新版本"));
+        $("#history_list").append(tmpl.format(divid, div.attr("objkey"), "最新版"));
         for(var i in history){
             if (history[i]){
                 var d = new Date(parseFloat(history[i]) * 1000);
                 var date = d.getFullYear() + "-" + d.getMonth() + "-" + d.getDate();
+                date += " " + d.getHours()+":" + d.getMinutes();
                 var key = NOTES_HISTORY_PREFIX + history[i];
                 $("#history_list").append(tmpl.format(divid, key, date));
             }
@@ -201,7 +202,7 @@ function Display(behavior){
     this.display_login = function(owner){};
     this.display_logout = function(){
         $("#owner").html("Logouting");
-        this.show_login_dialog();
+        this.display_login_dialog();
         this.display_iframe("Unlogin");
         this.display_title("Unlogin");
         $("#bt_login").show();
@@ -277,9 +278,9 @@ function login(){
             return on_http_status_not_200(response);
         }
 
-        DISPLAY.close_login_dialog();
         init_service(response);
     }, "html");
+    DISPLAY.close_login_dialog();
 }
 
 function logout(){
@@ -292,7 +293,7 @@ function logout(){
     }, "html");
 
     BEHAVIOR.selected_note_key = null;
-    display.display_logout();
+    DISPLAY.display_logout();
 }
 
 function get_history(divid, object_key){
@@ -479,7 +480,7 @@ function init_service(response)
         response = JSON.parse(response);
     }catch(e){
         console.log(response);
-        return show_login_dialog();
+        return DISPLAY.display_login_dialog();
     }
 
     if (parseInt(response.status / 100) != 2){
