@@ -11,7 +11,6 @@ if(!$bucket && !$object && !$title) {
     exit();
 }
 
-
 require_once 'public.php';
 
 $oss_sdk_service = get_oss_instance();
@@ -26,8 +25,7 @@ $upload_file_options = array(
         "Content-Encoding"=>"utf-8",
     ),
 );
-//var_dump($upload_file_options);
-//exit();
+
 $response = $oss_sdk_service->upload_file_by_content($bucket, $object, $upload_file_options);
 
 output_result($response);

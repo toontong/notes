@@ -13,20 +13,24 @@ ul{list-style:none;}
 
 /* 内容 */
 .content{padding-top:30px; }
-.left,.right{ position:absolute; top:0; right:0px; bottom:0px; }
+.middle,.right{ position:absolute; top:0; right:0px; bottom:0px; }
 /* 左边 */
 .note_class:hover,.note_list:hover{background:#eff1ef;}
-.left{width:360px; left:0px; border-right:1px solid #B3B3B3;  border-left:1px solid #B3B3B3; margin-top:30px;}
-.left h3{ border-bottom:1px solid #B3B3B3; line-height:29px;padding-left:10px;}
+.left_folder {width:180px; left:0px; border-right:1px solid #B3B3B3;border-left:1px solid #B3B3B3; margin-top:0px;}
+.folder{border-bottom:1px solid #B3B3B3; line-height:29px;padding-left:10px;cursor:pointer;}
+.folder:hover{background:#e2f2f8;}
+.this,.this:hover{background:#e2f2f8;}
+.middle{width:360px; left:180px; border-right:1px solid #B3B3B3; border-left:1px solid #B3B3B3; margin-top:30px;}
+.middle h3{font-size: inherit;margin: 0px 0;border-bottom:1px solid #B3B3B3; line-height:29px;padding-left:10px;}
 a.new_note{display:block; float:right; font-size:12px; color:#000; text-decoration:none; background:url(../images/new_note_bg.png); border:1px solid #cfcece; border-radius:5px;line-height:20px; padding:0 10px; margin:3px 10px;}
 a.new_note:hover{background:#e0f0e4;}
 .note_list_all{overflow-y:auto; position:absolute; right:0; top:30px; bottom:0;left:0;}
 .note_list{padding:10px; cursor:pointer; border-bottom:1px solid #cfcece; }
-.note_list h2{font-size:14px;}
+.note_list h2{font-size:14px;line-height: 2;margin: 0px 0;}
 .note_list p{height:70px; overflow:hidden;}
 .this,.this:hover{background:#e2f2f8;}
 /* 右边 */
-.right{left:360px;  margin-top:30px;}
+.right{left:540px;  margin-top:30px;}
 .edit{ padding:10px; overflow-y:auto; position:absolute; right:0; top:60px; bottom:0;left:0;}
 .button_bar{border-bottom:1px solid #B3B3B3;height:30px;line-height:30px;padding-left:10px;}
 .note_title{border-bottom:1px solid #B3B3B3;height:30px;line-height:30px;padding-left:10px;}
