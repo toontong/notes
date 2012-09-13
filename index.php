@@ -22,6 +22,7 @@
             <!-- 头部start -->
             <div class="top">
                 <div class="exit">
+                    <i class="icon-user icon-white"></i>
                     <a href="#" id="owner">Unlogin</a> | 
                     <a href="#" id="bt_logout" onclick="logout()">退出</a>
                     <a href="#" id="bt_login" onclick="show_login_dialog()">登录</a>
@@ -31,12 +32,14 @@
             <div class="content">
                 <!--左侧-->
                 <div class="left_folder">
-                    <div id="folder_all_notes" class="folder" onclick="get_notes()"><strong>All Notes</strong></div>
-                    <div id="folder_trash" class="folder" onclick="get_trash()"><strong>Trash</strong></div>
+                    <div id="folder_all_notes" class="folder" onclick="get_notes()"><i class="icon-home "></i> <strong>All Notes</strong></div>
+                    <div id="folder_trash" class="folder" onclick="get_trash()"><i class="icon-trash"></i> <strong>Trash</strong></div>
                 </div>
                 <!-- 中间start -->
                 <div class="middle">
-                    <h3>笔记列表<a href="#" id="bt_new_note" onclick="new_note()" class="new_note">新建笔记</a></h3>
+                    <h3>笔记列表
+                        <a href="#" id="bt_new_note" onclick="new_note()" class="btn btn-mini btn-info float_right"><i class="icon-plus icon-white"></i> 新建笔记</a>
+                    </h3>
                     <div id="all_notes_list" class="note_list_all">
                         <div class="note_list this">
                             <h2>正在加载</h2>
@@ -47,19 +50,25 @@
                         </div>
                     </div>
                 </div>
+                <div class="pagination">
+                    <ul id="page_list" class="pages_list">
+                        <li><a href="#" onclick="pre_page()">←</a></li>
+                        <li><a href="#" onclick="next_page()">→</a></li>
+                    </ul>
+                </div>
                 <!-- 中间end -->
                 <!-- 右边start -->
                 <div class="right">
                     <div id="button_bar" class="button_bar">
-                        <a href="#" id="bt_edit_note" class="new_note" style="float:left" onclick="edit_note()">编辑笔记</a>
-                        <a href="#" id="bt_save_note" class="new_note" style="float:left" onclick="save_note()">保存笔记</a>
-                        <a href="#" id="bt_delete_note" class="new_note"  onclick="delete_note()">删除笔记</a>
+                        <a href="#" id="bt_edit_note" class="btn btn-mini btn-info float_left" onclick="edit_note()"><i class="icon-edit icon-white"></i> 编辑笔记</a>
+                        <a href="#" id="bt_save_note" class="btn btn-mini btn-info float_left" onclick="save_note()"><i class="icon-book icon-white"></i> 保存笔记</a>
+                        <a href="#" id="bt_delete_note" class="btn btn-mini btn-info float_right"  onclick="delete_note()"><i class="icon-remove icon-white"></i> 删除笔记</a>
                     </div>
                     <div class="note_title">
                     	<span id="display_title"> </span>
                     	<input id="input_title" placeholder="Untitled" value="" type="text" name="input_title" style="width:90%"/>
                         <div id="bt_history" class="btn-group" style="float:right;">
-                            <button class="btn btn-mini btn-info">历史版本</button>
+                            <button class="btn btn-mini btn-info"><i class="icon-retweet icon-white"></i> 历史版本</button>
                             <button class="btn btn-mini btn-info dropdown-toggle" data-toggle="dropdown">
                                 <span class="caret"></span>
                             </button>

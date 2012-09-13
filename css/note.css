@@ -7,10 +7,9 @@ body{font-family:'微软雅黑',Helvetica, Arial, sans-serif; font-size:12px; ba
 img{border:none;}
 ul{list-style:none;}
 /* 头部 */
-.top{height:30px; position:relative; z-index:1; background:#2E7044; letter-spacing:1px;color:#fff;}
+.top{height:30px; position:relative; z-index:1; background:#2F96B4; letter-spacing:1px;color:#fff;}
 .top a{font-weight:bold; font-size:12px; color:#fff; text-decoration:none;}
 .top_name,.exit{ float:right; padding-right:15px;line-height:30px; }
-
 /* 内容 */
 .content{padding-top:30px; }
 .middle,.right{ position:absolute; top:0; right:0px; bottom:0px; }
@@ -20,8 +19,11 @@ ul{list-style:none;}
 .folder{border-bottom:1px solid #B3B3B3; line-height:29px;padding-left:10px;cursor:pointer;}
 .folder:hover{background:#e2f2f8;}
 .this,.this:hover{background:#e2f2f8;}
-.middle{width:360px; left:180px; border-right:1px solid #B3B3B3; border-left:1px solid #B3B3B3; margin-top:30px;}
+.middle{width:360px;left:180px; border-right:1px solid #B3B3B3; border-left:1px solid #B3B3B3; margin-top:30px;}
 .middle h3{font-size: inherit;margin: 0px 0;border-bottom:1px solid #B3B3B3; line-height:29px;padding-left:10px;}
+.pages_list{position: absolute;z-index: 256; left:440px; bottom:10px;}
+.float_right{float:right;margin:3px 10px;}
+.float_left{float:left;margin:3px 10px;}
 a.new_note{display:block; float:right; font-size:12px; color:#000; text-decoration:none; background:url(../images/new_note_bg.png); border:1px solid #cfcece; border-radius:5px;line-height:20px; padding:0 10px; margin:3px 10px;}
 a.new_note:hover{background:#e0f0e4;}
 .note_list_all{overflow-y:auto; position:absolute; right:0; top:30px; bottom:0;left:0;}
@@ -34,5 +36,3 @@ a.new_note:hover{background:#e0f0e4;}
 .edit{ padding:10px; overflow-y:auto; position:absolute; right:0; top:60px; bottom:0;left:0;}
 .button_bar{border-bottom:1px solid #B3B3B3;height:30px;line-height:30px;padding-left:10px;}
 .note_title{border-bottom:1px solid #B3B3B3;height:30px;line-height:30px;padding-left:10px;}
-
-

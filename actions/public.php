@@ -20,12 +20,11 @@ function get_oss_instance(){
     return  $oss_sdk_service;
 }
 
-
-
 function output_result($response){
     $res = array();
     $res['status'] = $response->status;
     $res['body'] = $response->body;
+    unset($response->header['x-oss-requestheaders']);
     $res['header'] = $response->header;
 
     echo json_encode($res);

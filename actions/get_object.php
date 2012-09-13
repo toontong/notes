@@ -24,14 +24,12 @@ if($response->status / 100 == 2){
     header($response->header["content-length"]);
     header($response->header["content-type"]);
     header($response->header["last-modified"]);
- 
 } else if ($response->status== 403){
     header("HTTP/1.1 403 Forbidden");
 } else{
     header("HTTP/1.1 404 Not Found"); 
 }
-echo $res['body'] = $response->body;
 
-//echo $res['body'] = $response->body;
-    
+echo $response->body;
+ 
 ?>
