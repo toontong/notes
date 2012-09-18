@@ -1,16 +1,18 @@
 <?php
-
-$bucket = isset($_POST['bucket']) ? $_POST['bucket'] : $_GET['bucket'];
-$object = isset($_POST['object']) ? $_POST['object'] : $_GET['object'];
  
-if(!$bucket && !$object) {
-    header("HTTP/1.1 400 Bad Request");
-    exit();
-}
-
 require_once 'public.php';
 
+$bucket = NOTES_BUCKET; //isset($_POST['bucket']) ? $_POST['bucket'] : $_GET['bucket'];
+$object = isset($_POST['object']) ? $_POST['object'] : $_GET['object'];
+
+if(!$bucket && !$object) {
+    exit_on(400);
+}
+
 $oss_sdk_service = get_oss_instance();
+if(strstr($object, $_SESSION['username']) !== $object){
+    exit_on(403);
+}
    
 $options = array(
     ALIOSS::OSS_CONTENT_TYPE => 'application/octet-stream',
@@ -31,5 +33,5 @@ if($response->status / 100 == 2){
 }
 
 echo $response->body;
- 
+  
 ?>

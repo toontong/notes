@@ -5,11 +5,13 @@ String.prototype.format = function(){
     });
 };
 
+var USER  ="";
+
 var NOTES_BUCKET = "notes_bucket";
-var NOTES_FOLDER_PREFIX = "notes_folder/";
-var NOTES_TRASH_PREFIX = "notes_trash/";
-var NOTES_HISTORY_PREFIX = "notes_history/";
-var NOTES_LIST_TEMPLATE = '<div class="note_list" id="{0}" objkey="{1}" history="{2}" onclick="onclick_get_object(\'{0}\',\'{1}\')"><h2>{3}</h2><p><strong>{4}</strong><span>&nbsp;&nbsp;{5}</span></p></div>';
+var NOTES_FOLDER_PREFIX = USER + "notes_folder/";
+var NOTES_TRASH_PREFIX = USER + "notes_trash/";
+var NOTES_HISTORY_PREFIX = USER + "notes_history/";
+var NOTES_LIST_TEMPLATE = '<div class="note_list" id="{0}" objkey="{1}" history="{2}" onclick="onclick_get_object(\'{0}\',\'{1}\')"><h2>{3}</h2><p><strong>{4}</strong> &nbsp;&nbsp;{5} </p></div>';
 var DisplayView = {reading:0x1, editing:0x2, creating:0x3, saving:0x4, 
                    trashing:0x10, normal:0x20};
 
@@ -50,10 +52,10 @@ function AliyunOSS(){
         $.post(url , {"bucket":bucket, "acl":acl}, handler.handler, 'html');
     };
 
-    this.get_bucket = function(prefix, callback){
+    this.get_bucket = function(prefix, marker, callback){
         var url = 'actions/get_bucket.php';
         var handler = new Default_Resp_Handler(callback);
-        $.post(url , {"bucket":NOTES_BUCKET, "prefix":prefix}, handler.handler , 'html');
+        $.post(url , {"bucket":NOTES_BUCKET, "prefix":prefix,"marker":marker}, handler.handler , 'html');
     };
 
     this.get_object = function(object_key, callback){
@@ -70,7 +72,11 @@ function AliyunOSS(){
     };
 
     this.put_object = function(object_key, title, disposition, content, callback){
-        return this.copy_put_object(object_key, title, disposition, content, '', callback)
+        var url = 'actions/put_object.php';
+        var handler = new Default_Resp_Handler(callback);
+        $.post(url , {"bucket":NOTES_BUCKET, "object":object_key,
+                      "title":title, "disposition":disposition,
+                      "content":content}, handler.handler, 'html');
     };
 
     this.get_object_meta = function (object_key, callback){
@@ -92,7 +98,7 @@ function AliyunOSS(){
                       "to_bucket":NOTES_BUCKET,"to_object":dest_obj}, handler.handler, 'html');
     };
 
-    this.init = function (init_callback){
+    this.get_service = function (init_callback){
         var url = 'actions/get_service.php';
         $.post(url , {} , init_callback, 'html');
     };
@@ -109,7 +115,6 @@ function Display(behavior){
         $("#display_title").show();
         $("#display_title").empty();
         $("#display_title").append(title);
-        $("#bt_new_note").show();
     };
 
     this.display_iframe =function(contents){
@@ -125,19 +130,10 @@ function Display(behavior){
         $("#owner").show();
         $("#bt_logout").show();
         $("#bt_login").hide();
+        $("#bt_new_note").show();
         this.display_iframe("Loading");
         this.display_title("Loading");
     };
-    
-    this.display_login_dialog = function (){
-        DIALOG_LOGIN = new Dialog($("#dialog_login").html(), {title:"设置aliyun验证信息"});
-        DIALOG_LOGIN.show();
-    };
-    
-    this.close_login_dialog = function(){
-        DIALOG_LOGIN.close();
-    };
-    
     this.display_create_note = function(){
         this.behavior.display_vew = DisplayView.creating;
         editor.setShow();
@@ -145,21 +141,11 @@ function Display(behavior){
         console.log('new notes');
         $("#display_title").hide();
         $("#bt_edit_note").hide();
+        $("#bt_history").hide();
         $("#bt_save_note").show();
         $("#input_title").show();
         $("#input_title").val("");
         $("#iframe").contents().find("body").hide();
-    };
-    this.display_read_note = function(divid){
-        this.behavior.display_vew = DisplayView.reading;
-        var div = $('#' + divid);
-        this.display_title(div.find('h2').html());
-        this.display_iframe("<strong>Loading...</strong>");
-        $("#bt_save_note").hide();
-        $("#bt_edit_note").show();
-        $("#bt_delete_note").show();
-        $(".note_list").removeClass().addClass("note_list");
-        $('#' + divid).addClass("note_list this");
     };
     this.display_history = function(divid){
         $("#bt_history").show();
@@ -168,7 +154,7 @@ function Display(behavior){
         $("#history_list").empty();
         var tmpl = '<li><a href="#" onclick="get_history(\'{0}\',\'{1}\')">{2}</a></li>';
         $("#history_list").append(tmpl.format(divid, div.attr("objkey"), "最新版"));
-        for(var i in history){
+        for(var i in history.reverse()){
             if (history[i]){
                 var d = new Date(parseFloat(history[i]) * 1000);
                 var date = d.getFullYear() + "-" + d.getMonth() + "-" + d.getDate();
@@ -182,6 +168,7 @@ function Display(behavior){
     this.display_save_note = function(title){
         BEHAVIOR.display_vew = DisplayView.saving;
         $("#bt_save_note").hide();
+        $("#bt_delete_note").hide();
         DISPLAY.display_title(title);
         DISPLAY.display_iframe("<strong>Saving note....</strong>");
     };
@@ -190,6 +177,7 @@ function Display(behavior){
         var div = $('#' + divid);
         $("#input_title").val(div.find('h2').html());
         $("#bt_edit_note").hide();
+        $("#bt_history").hide();
         $("#bt_save_note").show();
         $("#input_title").show();
         $("#display_title").hide();
@@ -199,27 +187,43 @@ function Display(behavior){
         body.empty();
         body.hide();
     };
+
+    this.display_login_dialog = function (){
+        $('#login_modal').modal('show');
+    };
+    
+    this.close_login_dialog = function(){
+        console.log("close_login_dialog");
+        $('#login_modal').modal('hide');
+    };
     this.display_login = function(owner){};
     this.display_logout = function(){
+        this.behavior.selected_note_divid = null;
+        this.behavior.current_folder = DisplayView.normal;
         $("#owner").html("Logouting");
         this.display_login_dialog();
         this.display_iframe("Unlogin");
         this.display_title("Unlogin");
+        $("#all_notes_list").empty();
         $("#bt_login").show();
         $("#bt_logout").hide();
         $("#bt_new_note").hide();
         $("#bt_edit_note").hide();
+        $("#bt_history").hide();
         $("#bt_delete_note").hide();
     };
     this.display_no_selected = function(){
-        this.behavior.selected_note_key = null;
+        this.behavior.selected_note_divid = null;
         this.display_iframe("");
         this.display_title("");
         $("#bt_edit_note").hide();
+        $("#bt_history").hide();
         $("#bt_delete_note").hide();
+        $("#bt_save_note").hide();
     };
     this.display_normal = function(){
         this.behavior.current_folder = DisplayView.normal;
+        this.behavior.pages_normal.current = 0;
         this.display_no_selected();
         $("#bt_new_note").show();
         $(".folder").removeClass().addClass("folder");
@@ -227,36 +231,222 @@ function Display(behavior){
     };
     this.display_trash = function(){
         this.behavior.current_folder = DisplayView.trashing;
+        this.behavior.pages_trash.current = 0;
         this.display_no_selected();
         $("#bt_new_note").hide();
         $(".folder").removeClass().addClass("folder");
         $("#folder_trash").addClass("folder this");
     };
-    this.display_note = function(contents){
+    this.display_read_note = function(divid){
+        this.behavior.display_vew = DisplayView.reading;
+        var div = $('#' + divid);
+        this.display_title(div.find('h2').html());
+        this.display_iframe("<strong>Loading...</strong>");
+        
+        if(this.behavior.current_folder == DisplayView.trashing){
+            $("#bt_edit_note").hide();
+        } else {
+            $("#bt_edit_note").show();
+        }
+        
+        $(".note_list").removeClass().addClass("note_list");
+        div.addClass("note_list this");
+    };
+    this.display_note = function(resp){
+        $("#bt_save_note").hide();
+        $("#bt_delete_note").show();
+        if(this.behavior.current_folder == DisplayView.normal)
+            $("#bt_edit_note").show();
         switch(this.behavior.display_vew){
-        case DisplayView.creating:break;
+        case DisplayView.creating:
+            $("#bt_edit_note").show();
+            break;
         case DisplayView.editing:
-            editor.setContent(contents);
+            editor.setContent(resp);
+            $("#bt_save_note").show();
             break;
         case DisplayView.reading:
         default:
-            this.display_iframe(contents);
+            this.display_iframe(resp);
         }
     };
 };
 
+function Pages(){
+    this.current = 0;
+    this.pages = {0:""};
+    this.append_next = function(marker){
+        for (var i = 1; i ; i++) {
+            if(!this.pages.hasOwnProperty(i)){
+                this.pages[i] = marker;
+                break;
+            }
+        };
+    }
+}
+
 function Behavior(){
-    this.selected_note_key = false;
+    this.selected_note_divid = null;
     this.display_vew = null;
     this.current_folder = DisplayView.normal;
+    this.pages_normal = new Pages();
+    this.pages_trash = new Pages();
+    this.append_next = function(marker){
+        if(typeof marker === "undefined"){
+            return;
+        }
+        if(marker.indexOf(NOTES_FOLDER_PREFIX) == 0){
+            this.pages_normal.append_next(marker);
+        } else if(marker.indexOf(NOTES_TRASH_PREFIX) == 0){
+            this.pages_trash.append_next(marker);
+        } else{
+            console.log("append_next", marker);
+        }
+    }
+    this.get_page = function(){
+        return  this.current_folder == DisplayView.normal ? this.pages_normal : this.pages_trash
+    }
 }
 
 var BEHAVIOR = new Behavior();
 var DISPLAY = new Display(BEHAVIOR);
 
-function login(){
-    var url = 'actions/login.php';
+function page_jump(index){
+    var pages = BEHAVIOR.get_page();
+    var prefix = BEHAVIOR.current_folder == DisplayView.normal ? NOTES_FOLDER_PREFIX : NOTES_TRASH_PREFIX;
+    var curr = pages.current;
+    nextmarker = pages.pages[curr + index];
+    if(nextmarker == undefined){
+        return false;
+    }
+    OSS.get_bucket(prefix, nextmarker, init_notes_folder);
+    pages.current += index;
+    return true;
+}
+
+function next_page(){
+    if(!page_jump(1))
+        showinfo("tooltip", "已是最后一页");
+}
+function pre_page(){
+    if(!page_jump(-1))
+        showinfo("tooltip", "已是第一页");
+}
+
+function onclick_login(){
+    DISPLAY.display_login_dialog();
+}
     
+function hash(psw){
+    // 加长password为了不容易反查原密码
+    return hex_md5(psw.toLocaleUpperCase() + '^o^2TooNTonG');
+}
+
+function register(){
+    var username = $("#create_username").val();
+    var password = $("#create_password").val();
+    var psw_again = $("#create_psw_again").val();
+    if(!username)
+        return showinfo("reg_info", '用户名不能为空');
+    if(username.indexOf("/") != -1)
+        return showinfo("reg_info", '用户名不能有非法字符');
+    if(!password)
+        return showinfo("reg_info", '密码不能为空');
+    if(password.length < 6)
+        return showinfo("reg_info", '安全起见，密码不能少于6位');
+    if(password != psw_again)
+        return showinfo("reg_info", '两次密码输入不相等.');
+
+    console.log("to register new user", username, password);
+
+    var url = "actions/register.php";
+    $.post(url, {username:username, password_hash:hash(password)}, function(resp){
+        try{
+
+            var res = JSON.parse(resp);
+            if (res.status == 200){
+                global_init(username);
+                OSS.get_bucket(NOTES_FOLDER_PREFIX, "", init_notes_folder);
+                DISPLAY.close_login_dialog();
+            } else if (res.status == 404){
+                showinfo("reg_info", "用户已存在，请使用密码登录");
+                $("#login_username").val(username);
+                $("#login_password").focus();
+                $("#create_password").val("");
+                $("#create_psw_again").val("");
+            }else
+                console.log(res);
+        }catch(e){
+            console.error(e);
+            console.log(resp);
+            return on_http_status_not_200(resp);
+        }
+    }, "html");
+    showinfo("reg_info", "正在注册...");
+}
+
+function showinfo(id, msg){
+    var info = $("#" + id);
+    info.html('<a class="close" data-dismiss="alert">×</a>' + msg);
+    info.show();
+    setTimeout(function(){info.hide()}, 2000);
+}
+
+function forget_password(){
+    showinfo("login_info", "正在推出..")
+}
+
+function login(is_show){
+
+    var url = 'actions/login.php';
+    BEHAVIOR.selected_note_divid = null;
+    var username = $("#login_username").val();
+    var password = $("#login_password").val();
+
+    $.post(url , {username:username,
+                  password_hash:hash(password)}, function(response)
+    {
+        try{
+            var res = JSON.parse(response);
+        }catch(e){
+            console.error(e);
+            console.log(response);
+            if(is_show)
+                showinfo("login_info", "登录异常 ");
+            return on_http_status_not_200(response);
+        }
+        if(res.status == 200){
+            global_init(res.user);
+            init_notes_folder(res);
+            $("#login_password").val("");
+            DISPLAY.close_login_dialog();
+        } else if (res.status == 404 || res.status == 405){
+            if(is_show)
+                showinfo("login_info", "用户名或密码不正确!");
+            $("#login_password").select();
+            $("#login_password").focus();
+            console.log("login ret", res);
+        } else {
+            if(is_show)
+                showinfo("login_info", "登录失败 " + res.status);
+            return on_http_status_not_200(res);
+        }
+    }, "html");
+    if(is_show)
+        showinfo("login_info", "正在登录...");
+}
+
+function global_init(username){
+    USER = username;
+    DISPLAY.display_owner(USER);
+    NOTES_FOLDER_PREFIX = USER + "/notes_folder/";
+    NOTES_TRASH_PREFIX = USER + "/notes_trash/";
+    NOTES_HISTORY_PREFIX = USER + "/notes_history/";
+}
+
+function access_key_login(){
+    var url = 'actions/login.php';
+
     if($("#access_id").val().length < 10 || $("#access_key").val() < 10 || $("#host").val() < 10){
         console.log($("#access_id").val());
         console.log($("#access_key").val());
@@ -264,7 +454,7 @@ function login(){
         return;
     }
 
-    BEHAVIOR.selected_note_key = null;
+    BEHAVIOR.selected_note_divid = null;
 
     $.post(url , {access_key:$("#access_key").val(),
                   access_id:$("#access_id").val(),
@@ -292,7 +482,6 @@ function logout(){
         $("#owner").html("Unlogin");
     }, "html");
 
-    BEHAVIOR.selected_note_key = null;
     DISPLAY.display_logout();
 }
 
@@ -306,9 +495,9 @@ function get_history(divid, object_key){
 
 function onclick_get_object(divid, object_key){
     // TODO: 如果 div的class已经是"note_list this" 则直接返回
-    if (BEHAVIOR.selected_note_key == divid)
+    if (BEHAVIOR.selected_note_divid == divid)
         return;
-    BEHAVIOR.selected_note_key = divid;
+    BEHAVIOR.selected_note_divid = divid;
 
     DISPLAY.display_read_note(divid);
     DISPLAY.display_history(divid);
@@ -319,17 +508,17 @@ function onclick_get_object(divid, object_key){
 }
 
 function new_note(){
-    BEHAVIOR.selected_note_key = null;
+    BEHAVIOR.selected_note_divid = null;
     DISPLAY.display_create_note();
 }
 
 function delete_note(){
-    if (BEHAVIOR.selected_note_key == null)
+    if (BEHAVIOR.selected_note_divid == null)
         return;
-    var div = $('#' + BEHAVIOR.selected_note_key);
+    var div = $('#' + BEHAVIOR.selected_note_divid);
     var object_key = div.attr("objkey");
     if (typeof object_key === "undefined"){
-        console.log('undefined note', BEHAVIOR.selected_note_key);
+        console.log('undefined note', BEHAVIOR.selected_note_divid);
         return;
     }
 
@@ -348,6 +537,7 @@ function delete_note(){
         onclick_get_object(next.attr("id"), next.attr("objkey"));
     }
 
+    DISPLAY.display_iframe("正在删除... ");
     if (0 == object_key.indexOf(NOTES_FOLDER_PREFIX)){
         // 先放到回收站
         var dest_obj = NOTES_TRASH_PREFIX + object_key.substr(NOTES_FOLDER_PREFIX.length)
@@ -360,9 +550,9 @@ function delete_note(){
 }
 
 function edit_note(){
-    if (BEHAVIOR.selected_note_key == null)
+    if (BEHAVIOR.selected_note_divid == null)
         return;
-    DISPLAY.display_edit_note(BEHAVIOR.selected_note_key);
+    DISPLAY.display_edit_note(BEHAVIOR.selected_note_divid);
 }
 
 function save_note(){
@@ -377,69 +567,89 @@ function save_note(){
         alert("空内容");
         return;
     }
+
     var now = new Date();
     var object_key = "";
     var history = "";
-    if(BEHAVIOR.selected_note_key == null){
+    var selected_divid = BEHAVIOR.selected_note_divid;
+
+    if(selected_divid == null){
         object_key = NOTES_FOLDER_PREFIX + now.getTime();
         console.log("creating a new note", object_key);
     } else {
-        var div = $('#' + BEHAVIOR.selected_note_key);
+        var div = $('#' + selected_divid);
         object_key = div.attr("objkey");
         history = div.attr("history");
         if (typeof object_key === "undefined") {
-            console.log('undefined note', BEHAVIOR.selected_note_key, div);
+            console.log('undefined note', selected_divid, div);
             return;
         }
         console.log("changing a old note", object_key);
     }
 
-    DISPLAY.display_save_note(title);
-
-    OSS.copy_put_object(object_key, title, txt, content, history,
-    function(res){
+    function after_save(res){
         DISPLAY.display_note(content);
         var lastmodified = now.getFullYear() + "-" + now.getMonth() + "-" + now.getDate();
-        if (BEHAVIOR.selected_note_key == null){
+
+        if (selected_divid == null){
             // 新建保存
+            selected_divid = BEHAVIOR.selected_note_divid = Math.random().toString().substr(2);
             $("#all_notes_list").prepend(
-                NOTES_LIST_TEMPLATE.format(Math.random().toString().substr(2), object_key, "",
+                NOTES_LIST_TEMPLATE.format(BEHAVIOR.selected_note_divid, object_key, "",
                     title, lastmodified, txt));
+            $(".note_list").removeClass().addClass("note_list");
+            $("#" + selected_divid).addClass("note_list this");
         } else {
-            var div = $('#' + BEHAVIOR.selected_note_key);
+            var div = $('#' + selected_divid);
             div.empty();
             div.append("<h2>{0}</h2><p><strong>{1}</strong><span>&nbsp;&nbsp;{2}</span></p>".format(title, lastmodified, txt));
             div.attr("history", res.header["x-oss-meta-history"]);
         }
-    });
+        if (selected_divid == BEHAVIOR.selected_note_divid)
+            DISPLAY.display_history(selected_divid);
+    }
+    DISPLAY.display_save_note(title);
+
+    if(BEHAVIOR.selected_note_divid == null){
+        OSS.put_object(object_key, title, txt, content, after_save);
+    } else{
+        OSS.copy_put_object(object_key, title, txt, content, history,after_save);
+    }
 }
 
 function get_trash(){
     if(BEHAVIOR.current_folder == DisplayView.trashing)
         return;
     DISPLAY.display_trash();
-    OSS.get_bucket(NOTES_TRASH_PREFIX, init_notes_folder);
+    OSS.get_bucket(NOTES_TRASH_PREFIX, "", init_notes_folder);
 }
 
 function get_notes(){
     if(BEHAVIOR.current_folder == DisplayView.normal)
         return;
     DISPLAY.display_normal();
-    OSS.get_bucket(NOTES_FOLDER_PREFIX, init_notes_folder);   
+    OSS.get_bucket(NOTES_FOLDER_PREFIX, "", init_notes_folder);   
 }
 
 function init_notes_folder(resp){
     // common_prefix是带斜杠'/'结束的，为文件夹. type is Array;
     // var common_prefix = res.listbucketresult.commonprefixes;
     // contents是文件. type is Array
+    $("#all_notes_list").empty();
+
     var res = xmlToJson.parser(resp.body);
+    console.log(res);
+
     var contents = res.listbucketresult.contents;
+    BEHAVIOR.append_next(res.listbucketresult.nextmarker);
     if (typeof contents === "undefined"){
-        console.log(res);
+        if(BEHAVIOR.current_folder == DisplayView.normal){
+            DISPLAY.display_iframe('<h3>Did not have any notes.</h3>');
+            DISPLAY.display_title('<a href="#" onclick="new_note()">Click here  to create note</a>');
+        }
         return;
     }
 
-    $("#all_notes_list").empty();
     function add_object_to_view(obj)
     {
         if(obj.key.substr(-1) != "/")
@@ -467,12 +677,11 @@ function init_notes_folder(resp){
     }else{
         add_object_to_view(contents);
     }
+    DISPLAY.display_no_selected();
 }
 
 /* 初始化过程
 * 1)新建设一个bucket为: NOTES_BUCKET
-* 2)NOTES_BUCKET 下新建两个文件夹：NOTES_FOLDER_PREFIX，NOTES_TRASH_PREFIX
-* 3)NOTES_FOLDER_PREFIX 下新建一个文件
 */
 function init_service(response)
 {
@@ -503,56 +712,19 @@ function init_service(response)
         }
     }
 
-    function init_folder(){
-        OSS.put_object(NOTES_FOLDER_PREFIX, NOTES_FOLDER_PREFIX, "all notes will save at this prefix", "folder", function(res){
-                var object_key = Math.random().toString().substr(2);
-                var frist_title = "the frist notes";
-                var frist_content = "the frist notes created by Aliyun Notes.";
-                OSS.put_object(NOTES_BUCKET, NOTES_FOLDER_PREFIX + object_key, frist_title, frist_content, frist_content, function(res){
-                    OSS.get_bucket(NOTES_FOLDER_PREFIX, init_notes_folder);
-                });
-            });
-    	OSS.put_object(NOTES_TRASH_PREFIX, NOTES_TRASH_PREFIX, "all trash notes will save at this prefix", "folder");
-    }
-
     if (!has_notes_bucket){
         OSS.create_bucket(NOTES_BUCKET, "private", function(response){
-            iOSS.get_bucket(NOTES_FOLDER_PREFIX, init_notes_folder);
+            OSS.get_bucket(NOTES_FOLDER_PREFIX, "", init_notes_folder);
         });
     } else {
-        OSS.get_bucket(NOTES_FOLDER_PREFIX, init_notes_folder);
-        return;
-        OSS.get_bucket('', function(resp){
-            var res = xmlToJson.parser(resp.body);
-            // common_prefix是带斜杠'/'结束的，为文件夹. type is Array;
-            var common_prefix = res.listbucketresult.commonprefixes;
-            if(typeof common_prefix === 'undefined'){
-                return init_folder();
-            }
-            var find_notes_folder_perfix = false;
-            var find_notes_trash_perfix = false;
-            for (var key in common_prefix){
-                if (common_prefix[key].prefix == NOTES_FOLDER_PREFIX){
-                    find_notes_folder_perfix = true;
-                    continue;
-                }
-                if (common_prefix[key].prefix == NOTES_TRASH_PREFIX){
-                    find_notes_trash_perfix = true;
-                    continue;
-                } else {
-                    console.log(common_prefix[key].prefix);
-                }
-            }
-            if (!find_notes_folder_perfix || !find_notes_trash_perfix){
-                return init_folder();
-            } else {
-                OSS.get_bucket(NOTES_FOLDER_PREFIX, init_notes_folder);
-            }
-        });
+        OSS.get_bucket(NOTES_FOLDER_PREFIX, "", init_notes_folder);
     }
 }
 
 function init_notes(){
-    OSS.init(init_service);
+    // 多用户时：
+    login(false);
+    // 单用户时使用：
+    //OSS.get_service(init_service);
 }
 

@@ -24,12 +24,10 @@ ul{list-style:none;}
 .pages_list{position: absolute;z-index: 256; left:440px; bottom:10px;}
 .float_right{float:right;margin:3px 10px;}
 .float_left{float:left;margin:3px 10px;}
-a.new_note{display:block; float:right; font-size:12px; color:#000; text-decoration:none; background:url(../images/new_note_bg.png); border:1px solid #cfcece; border-radius:5px;line-height:20px; padding:0 10px; margin:3px 10px;}
-a.new_note:hover{background:#e0f0e4;}
 .note_list_all{overflow-y:auto; position:absolute; right:0; top:30px; bottom:0;left:0;}
 .note_list{padding:10px; cursor:pointer; border-bottom:1px solid #cfcece; }
 .note_list h2{font-size:14px;line-height: 2;margin: 0px 0;}
-.note_list p{height:70px; overflow:hidden;}
+.note_list p{height:30px; overflow:hidden;}
 .this,.this:hover{background:#e2f2f8;}
 /* 右边 */
 .right{left:540px;  margin-top:30px;}

@@ -1,22 +1,23 @@
 <?php
 // copy一份旧的object，再把新的内容content写到旧的object上
 // 每份object保留5份history
-$MAX_HISTORY_COPY = 5;
+require_once 'public.php';
 
-$bucket = isset($_POST['bucket']) ? $_POST['bucket'] : $_GET['bucket'];
+$bucket = NOTES_BUCKET; //isset($_POST['bucket']) ? $_POST['bucket'] : $_GET['bucket'];
 $object = isset($_POST['object']) ? $_POST['object'] : $_GET['object'];
 $title = isset($_POST['title']) ? $_POST['title'] : $_GET['title'];
 $content = $_POST['content']; // 必需post 过来 ，可以为空
 $history = isset($_POST['history']) ? $_POST['history'] : $_GET['history'];
 $disposition = isset($_POST['disposition']) ? $_POST['disposition'] : $_GET['disposition'];
 
-require_once 'public.php';
-
 $oss_sdk_service = get_oss_instance();
 
-if(!$bucket && !$object && !$title) {
-    header("HTTP/1.0 400 Bad Request");
-    exit();
+if(strstr($object, $_SESSION['username']) !== $object){
+    exit_on(403);
+}
+
+if(!$object && !$title) {
+    exit_on(400);
 }
 
 function microtime_float()
@@ -26,10 +27,10 @@ function microtime_float()
 }
 
 $copy_to = microtime_float();
-$to_object = "notes_history/" . $copy_to;
+$to_object = $_SESSION['username'] . NOTES_HISTORY_PREFIX . $copy_to;
 $arr_history = $history ? explode(";", ltrim($history, ";")) : array();
 
-if(count($arr_history) >= $MAX_HISTORY_COPY){
+if(count($arr_history) >= MAX_HISTORY_COPY){
     $options = array('quiet' => false);
     // 不s结束的，是单个删除
     $response = $oss_sdk_service->delete_object($bucket, array_shift($arr_history), $options);

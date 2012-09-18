@@ -2,17 +2,19 @@
 $bucket = isset($_POST['bucket']) ? $_POST['bucket'] : $_GET['bucket'];
 $acl = isset($_POST['acl']) ? $_POST['acl'] : $_GET['acl'];
 
+require_once 'public.php';
+
+//安全控制：多用户不允许调用
+exit_on(403);
+
 if(!$bucket) {
-    header("HTTP/1.1 400 Bad Request");
-    exit();
+    exit_on(400);
 }
 if (!$acl) {
     $acl = ALIOSS::OSS_ACL_TYPE_PRIVATE;
     //$acl = ALIOSS::OSS_ACL_TYPE_PUBLIC_READ;
     //$acl = ALIOSS::OSS_ACL_TYPE_PUBLIC_READ_WRITE;
 }
-
-require_once 'public.php';
 
 $oss_sdk_service = get_oss_instance();
 

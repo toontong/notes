@@ -1,17 +1,25 @@
 <?php
-$bucket = isset($_POST['bucket']) ? $_POST['bucket'] : $_GET['bucket'];
-$object = isset($_POST['object']) ? $_POST['object'] : $_GET['object'];
-$to_bucket = isset($_POST['to_bucket']) ? $_POST['to_bucket'] : $_GET['to_bucket'];
-$to_object = isset($_POST['to_object']) ? $_POST['to_object'] : $_GET['to_object'];
  
-if(!$bucket && !$object && !$to_object && !$to_bucket) {
-    header("HTTP/1.1 400 Bad Request");
-    exit();
-}
-
 require_once 'public.php';
 
+$bucket = NOTES_BUCKET; //isset($_POST['bucket']) ? $_POST['bucket'] : $_GET['bucket'];
+$object = isset($_POST['object']) ? $_POST['object'] : $_GET['object'];
+$to_bucket = NOTES_BUCKET; //isset($_POST['to_bucket']) ? $_POST['to_bucket'] : $_GET['to_bucket'];
+$to_object = isset($_POST['to_object']) ? $_POST['to_object'] : $_GET['to_object'];
+
+if(!$bucket && !$object && !$to_object && !$to_bucket) {
+    exit_on(400);
+}
+
 $oss_sdk_service = get_oss_instance();
+
+if(strstr($object, $_SESSION['username']) !== $object){
+    exit_on(403);
+}
+
+if(strstr($to_object, $_SESSION['username']) !== $to_object){
+    exit_on(403);
+}
 
 $response = $oss_sdk_service->copy_object($bucket, $object, $to_bucket, $to_object);
 
