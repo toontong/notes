@@ -1,9 +1,8 @@
 <?php
-// copy一份旧的object，再把新的内容content写到旧的object上
-// 每份object保留5份history
+
 require_once 'public.php';
 
-$bucket = NOTES_BUCKET; //isset($_POST['bucket']) ? $_POST['bucket'] : $_GET['bucket'];
+$bucket = MULTI_USER_SUPPORT ? NOTES_BUCKET : (isset($_POST['bucket']) ? $_POST['bucket'] : $_GET['bucket']);
 $object = isset($_POST['object']) ? $_POST['object'] : $_GET['object'];
 $title = isset($_POST['title']) ? $_POST['title'] : $_GET['title'];
 $content = $_POST['content']; // 必需post 过来 ，可以为空
@@ -12,8 +11,8 @@ $disposition = isset($_POST['disposition']) ? $_POST['disposition'] : $_GET['dis
 
 $oss_sdk_service = get_oss_instance();
 
-if(strstr($object, $_SESSION['username']) !== $object){
-    exit_on(403);
+if(MULTI_USER_SUPPORT && strstr($object, $_SESSION['username']) !== $object){
+    exit_on(401);
 }
 
 if(!$object && !$title) {
@@ -27,7 +26,7 @@ function microtime_float()
 }
 
 $copy_to = microtime_float();
-$to_object = $_SESSION['username'] . NOTES_HISTORY_PREFIX . $copy_to;
+$to_object = MULTI_USER_SUPPORT ? NOTES_HISTORY_PREFIX . $copy_to : $_SESSION['username'] . NOTES_HISTORY_PREFIX . $copy_to;
 $arr_history = $history ? explode(";", ltrim($history, ";")) : array();
 
 if(count($arr_history) >= MAX_HISTORY_COPY){

@@ -4,8 +4,8 @@
 define('MULTI_USER_SUPPORT', TRUE);
 
 // 如果 MULTI_USER_SUPPORT 设置为false，不必设置以下三个值。
-define('ACCESS_ID', "请输入自己的ACCESS_ID");
-define('ACCESS_KEY', "请输入自己的ACCESS_KEY");
+define('ACCESS_ID', "");
+define('ACCESS_KEY', "=");
 define('HOST_OSS', 'storage.aliyun.com');
 
 // 每个笔记的历史版本最大个数

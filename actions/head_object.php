@@ -2,7 +2,7 @@
  
 require_once 'public.php';
 
-$bucket = NOTES_BUCKET; //isset($_POST['bucket']) ? $_POST['bucket'] : $_GET['bucket'];
+$bucket = MULTI_USER_SUPPORT ? NOTES_BUCKET : (isset($_POST['bucket']) ? $_POST['bucket'] : $_GET['bucket']);
 $object = isset($_POST['object']) ? $_POST['object'] : $_GET['object'];
 
 if(!$bucket && !$object) {
@@ -11,8 +11,8 @@ if(!$bucket && !$object) {
 
 $oss_sdk_service = get_oss_instance();
 
-if(strstr($object, $_SESSION['username']) !== $object){
-    exit_on(403);
+if(MULTI_USER_SUPPORT && strstr($object, $_SESSION['username']) !== $object){
+    exit_on(401);
 }
 
 

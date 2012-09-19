@@ -1,7 +1,8 @@
 <?php
+
 require_once 'public.php';
 
-$bucket = NOTES_BUCKET; //isset($_POST['bucket']) ? $_POST['bucket'] : $_GET['bucket'];
+$bucket = MULTI_USER_SUPPORT ? NOTES_BUCKET : (isset($_POST['bucket']) ? $_POST['bucket'] : $_GET['bucket']);
 $prefix = isset($_POST['prefix']) ? $_POST['prefix'] : $_GET['prefix'];
 $marker = isset($_POST['marker']) ? $_POST['marker'] : $_GET['marker'];
 
@@ -10,8 +11,8 @@ if(!$bucket && !$prefix) {
 }
 
 $oss_sdk_service = get_oss_instance();
-if(strstr($prefix, $_SESSION['username']) !== $prefix){
-    exit_on(403);
+if(MULTI_USER_SUPPORT && strstr($prefix, $_SESSION['username']) !== $prefix){
+    exit_on(401);
 }
 
 $options = array(

@@ -2,11 +2,15 @@
 
 require_once "config.inc.php";
 require_once '../include/oss_sdk/sdk.class.php';
+
 session_start();
 
 function exit_on($code){
     $body = "unkown";
     switch ($code) {
+        case 401:            
+            $body = "Unauthorized";
+            break;
         case 403:
             $body = "403 Forbidden";
             break;
@@ -17,18 +21,21 @@ function exit_on($code){
             $body ="UNKOWN";
             break;
     }
-    echo json_encode(array('status' => $code,'body'=> $body));
+    echo json_encode(array('status' => $code,'body'=> $body, 'multi_user'=> MULTI_USER_SUPPORT));
     exit();
 }
 
 function get_oss_instance(){
-    if (isset($_SESSION['access_key']))
-    {
+    if(MULTI_USER_SUPPORT && isset($_SESSION['username'])){
+    
+       $oss_sdk_service = new ALIOSS(ACCESS_ID, ACCESS_KEY, HOST_OSS);
+    
+    }else if(!MULTI_USER_SUPPORT && isset($_SESSION['access_key'])){
+        
         $oss_sdk_service = new ALIOSS($_SESSION['access_id'], $_SESSION['access_key'], $_SESSION['host']);
-    } elseif(isset($_SESSION['username'])){
-        $oss_sdk_service = new ALIOSS(ACCESS_ID, ACCESS_KEY, HOST_OSS);
-    } else {
-        return exit_on(403);
+    
+    }else{
+        return exit_on(401);
     }
 
     //设置是否打开curl调试模式
@@ -44,6 +51,7 @@ function output_result($response){
     $res['header'] = $response->header;
     echo json_encode($res);
 }
+
 function output_result2($response, $arr){
     $res = array();
     $res['status'] = $response->status;

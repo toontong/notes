@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <title>Aliyun Notes on Web</title>
+  <title>OSS云笔记</title>
   <link rel="shortcut icon" href="images/favicon.ico"/>
   <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css" />
   <link rel="stylesheet" href="css/note.css"/>
@@ -18,10 +18,10 @@
         <h4>关于OSS云笔记</h4>
       </div>
       <div class="modal-body">
-        <p>本项目简易域名为<a href="http://yunnote.co.cc" target="_blank">http://yunnote.co.cc</a></p>
-        <p>本项目使用<a href="http://www.aliyun.com" target="_blank">aliyun.com</a>的OSS作为存储驱动</p>
+        <p>本项目演示地址<a href="http://yunnote.co.cc" target="_blank">http://yunnote.co.cc</a></p>
+        <p>本项目由<a href="http://www.aliyun.com" target="_blank">aliyun.com</a>OSS作存储驱动</p>
         <p>本项目源代码托管在<a href="https://github.com/toontong/notes" target="_blank">github.com</a></p>
-        <p>本项目运行在<a href="http://sae.sina.com.cn" target="_blank">SAE</a>所提供服务器</p>
+        <p>本项目运行在<a href="http://sae.sina.com.cn" target="_blank">Aliyun.com</a>云服务器</p>
         <p>本项目在线编辑器由<a href="http://ueditor.baidu.com" target="_blank">baidu.com</a>提供</p>
         <hr>
         <h5>本项目已实现功能包括：</h5>
@@ -43,6 +43,21 @@
     <!-- 头部start -->
     <div class="top">
       <div class="float_left"><a href="#" onclick="$('#modal_about').modal({backdrop:false})">About OSS云笔记</a></div>
+      <!-- Baidu Button BEGIN -->      
+      <div id="bdshare" class=" bdshare_t bds_tools get-codes-bdshare">
+        <span class="bds_more">分享到：</span>
+        <a class="bds_tsina"></a>
+        <a class="bds_tqq"></a>
+        <a class="bds_qzone"></a>
+        <a class="bds_renren"></a>
+        <a class="shareCount"></a>
+      </div>
+      <script type="text/javascript" id="bdshare_js" data="type=tools" ></script>
+      <script type="text/javascript" id="bdshell_js"></script>
+      <script type="text/javascript">
+        document.getElementById("bdshell_js").src = "http://bdimg.share.baidu.com/static/js/shell_v2.js?cdnversion=" + new Date().getHours();
+      </script>
+      <!-- Baidu Button END -->      
       <div class="exit"> 
         <i class="icon-user icon-white"></i>
         <a href="#" id="owner">Unlogin</a>
@@ -72,11 +87,7 @@
         </h3>
         <div id="all_notes_list" class="note_list_all">
           <div class="note_list this">
-            <h2>正在加载</h2>
-            <p>
-              <strong><?php echo date(DATE_RFC822)?></strong>
-              <span>Loading</span>
-            </p>
+            <h2>未登录</h2>
           </div>
         </div>
       </div>
@@ -211,24 +222,66 @@
       <a href="#" class="btn btn-primary" data-dismiss="modal" id="">关闭</a>
     </div>
   </div>
+    <div id="oss_login_modal" class="modal hide fade" style="display:none; width:400px;">
+    <div class="modal-header">
+      <a class="close" data-dismiss="modal" id="">×</a>
+      <h3>OSS ACCESS_KEY登录 - 单用户模式</h3>
+    </div>
+    <div class="modal-body">
+      <div class="container" style=" width:360px;">
+        <div class="row">
+          <div class="span4">
+            <form class="form-vertical">
+              <fieldset>
+                <legend >OSS ACCESS_KEY 登录</legend>
+                <div class="control-group">
+                  <label class="control-label" for="access_id">ACCESS_ID</label>
+                  <div class="controls">
+                    <input type="text" class="input-big" id="access_id"></div>
+                </div>
+                <div class="control-group">
+                  <label class="control-label" for="access_key">ACCESS_KEY</label>
+                  <div class="controls">
+                    <input type="text" class="input-big" id="access_key"></div>
+                </div>
+                <div class="control-group">
+                  <label class="control-label" for="oss_host">HOST</label>
+                  <div class="controls">
+                    <input type="text" value="storage.aliyun.com" class="input-big" id="oss_host"></div>
+                </div>
+                <div class="control-group">
+                  <button class="btn btn-info" onclick="login(true)">登录</button>
+                </div>
+                <fieldset>
+                <div id="oss_login_info" class="alert alert-info hide">
+                </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <a href="#" class="btn btn-primary" data-dismiss="modal" id="">关闭</a>
+    </div>
 </body>
 <script type="text/javascript" src="js/jquery.js"></script>
+<script type="text/javascript">
+  $("#dialog_login").hide();
+  $("#bt_edit_note").hide();
+  $("#bt_save_note").hide();
+  $("#bt_delete_note").hide();
+  $("#input_title").hide();
+  $("#bt_logout").hide();
+  $("#bt_new_note").hide();
+  $("#bt_history").hide();
+</script>
 <script type="text/javascript" src="js/xml2json.js" ></script>
 <script type="text/javascript" src="js/md5.js"></script>
 <script type="text/javascript" src="bootstrap/js/bootstrap.min.js"></script>
-<script type="text/javascript" src="js/notes.js?<?php echo time()?>"></script>
 <script type="text/javascript" src="ueditor/editor_config.js"></script>
 <script type="text/javascript" src="ueditor/editor.min.js"></script>
+<script type="text/javascript" src="js/notes.js?<?php echo time()?>"></script>
 <script type="text/javascript">
-
-$("#dialog_login").hide();
-$("#bt_edit_note").hide();
-$("#bt_save_note").hide();
-$("#bt_delete_note").hide();
-$("#input_title").hide();
-$("#bt_logout").hide();
-$("#bt_new_note").hide();
-$("#bt_history").hide();
 
 var editor = new UE.ui.Editor({UEDITOR_HOME_URL:"ueditor/", isShow:false});
 

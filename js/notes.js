@@ -5,7 +5,7 @@ String.prototype.format = function(){
     });
 };
 
-var USER  ="";
+var USER  = "";
 
 var NOTES_BUCKET = "notes_bucket";
 var NOTES_FOLDER_PREFIX = USER + "notes_folder/";
@@ -14,10 +14,17 @@ var NOTES_HISTORY_PREFIX = USER + "notes_history/";
 var NOTES_LIST_TEMPLATE = '<div class="note_list" id="{0}" objkey="{1}" history="{2}" onclick="onclick_get_object(\'{0}\',\'{1}\')"><h2>{3}</h2><p><strong>{4}</strong> &nbsp;&nbsp;{5} </p></div>';
 var DisplayView = {reading:0x1, editing:0x2, creating:0x3, saving:0x4, 
                    trashing:0x10, normal:0x20};
+var MULTI_USER = null;
 
 function on_http_status_not_200(response){
-    if (response.status == 403){
+    if (response.status == 401){
         console.log(response);
+        MULTI_USER = response.multi_user;
+        return DISPLAY.display_login_dialog();
+    }else if(response.status == 403){
+        console.log(response);
+        MULTI_USER = response.multi_user;
+        if(!MULTI_USER)showinfo("oss_login_info", "access_key不正确");
         return DISPLAY.display_login_dialog();
     }
     console.error(response.status);
@@ -51,7 +58,6 @@ function AliyunOSS(){
         var handler = new Default_Resp_Handler(callback);
         $.post(url , {"bucket":bucket, "acl":acl}, handler.handler, 'html');
     };
-
     this.get_bucket = function(prefix, marker, callback){
         var url = 'actions/get_bucket.php';
         var handler = new Default_Resp_Handler(callback);
@@ -109,14 +115,13 @@ var OSS = new AliyunOSS();
 function Display(behavior){
     var DIALOG_LOGIN = null;
     this.behavior = behavior;
-    
+
     this.display_title = function(title){
         $("#input_title").hide();
         $("#display_title").show();
         $("#display_title").empty();
         $("#display_title").append(title);
     };
-
     this.display_iframe =function(contents){
         editor.setHide();
         var body = $("#iframe").contents().find("body");
@@ -187,21 +192,22 @@ function Display(behavior){
         body.empty();
         body.hide();
     };
-
     this.display_login_dialog = function (){
-        $('#login_modal').modal('show');
+        if(MULTI_USER)
+            $('#login_modal').modal('show');
+        else
+            $('#oss_login_modal').modal('show');
     };
-    
     this.close_login_dialog = function(){
-        console.log("close_login_dialog");
-        $('#login_modal').modal('hide');
+        if(MULTI_USER)$('#login_modal').modal('hide');
+        else $('#oss_login_modal').modal('hide');
     };
     this.display_login = function(owner){};
     this.display_logout = function(){
         this.behavior.selected_note_divid = null;
         this.behavior.current_folder = DisplayView.normal;
         $("#owner").html("Logouting");
-        this.display_login_dialog();
+        
         this.display_iframe("Unlogin");
         this.display_title("Unlogin");
         $("#all_notes_list").empty();
@@ -211,6 +217,8 @@ function Display(behavior){
         $("#bt_edit_note").hide();
         $("#bt_history").hide();
         $("#bt_delete_note").hide();
+        console.log("Unlogin");
+        this.display_login_dialog();
     };
     this.display_no_selected = function(){
         this.behavior.selected_note_divid = null;
@@ -241,7 +249,7 @@ function Display(behavior){
         this.behavior.display_vew = DisplayView.reading;
         var div = $('#' + divid);
         this.display_title(div.find('h2').html());
-        this.display_iframe("<strong>Loading...</strong>");
+        this.display_iframe("<strong>Loading Note Data.</strong>");
         
         if(this.behavior.current_folder == DisplayView.trashing){
             $("#bt_edit_note").hide();
@@ -288,7 +296,7 @@ function Pages(){
 function Behavior(){
     this.selected_note_divid = null;
     this.display_vew = null;
-    this.current_folder = DisplayView.normal;
+    this.current_folder = null;
     this.pages_normal = new Pages();
     this.pages_trash = new Pages();
     this.append_next = function(marker){
@@ -397,7 +405,8 @@ function forget_password(){
 }
 
 function login(is_show){
-
+    if(!MULTI_USER)
+        return access_key_login();
     var url = 'actions/login.php';
     BEHAVIOR.selected_note_divid = null;
     var username = $("#login_username").val();
@@ -447,30 +456,22 @@ function global_init(username){
 function access_key_login(){
     var url = 'actions/login.php';
 
-    if($("#access_id").val().length < 10 || $("#access_key").val() < 10 || $("#host").val() < 10){
-        console.log($("#access_id").val());
-        console.log($("#access_key").val());
-        console.log($("#host").val());
-        return;
-    }
-
     BEHAVIOR.selected_note_divid = null;
 
     $.post(url , {access_key:$("#access_key").val(),
                   access_id:$("#access_id").val(),
-                  host:$("#host").val(), } , function(response)
+                  host:$("#oss_host").val(), } , function(response)
     {
         try{
-            JSON.parse(response);
+            var res = JSON.parse(response);
         }catch(e){
-            console.error(e);
             console.log(response);
             return on_http_status_not_200(response);
         }
-
+        if(res.status == 200)
+            DISPLAY.close_login_dialog();
         init_service(response);
     }, "html");
-    DISPLAY.close_login_dialog();
 }
 
 function logout(){
