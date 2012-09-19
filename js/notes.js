@@ -446,6 +446,7 @@ function login(is_show){
 }
 
 function global_init(username){
+    MULTI_USER = true;
     USER = username;
     DISPLAY.display_owner(USER);
     NOTES_FOLDER_PREFIX = USER + "/notes_folder/";
@@ -455,7 +456,7 @@ function global_init(username){
 
 function access_key_login(){
     var url = 'actions/login.php';
-
+    console.log("access_key_login");
     BEHAVIOR.selected_note_divid = null;
 
     $.post(url , {access_key:$("#access_key").val(),
@@ -470,6 +471,11 @@ function access_key_login(){
         }
         if(res.status == 200)
             DISPLAY.close_login_dialog();
+        console.log(res);
+        if(res.user){
+            global_init(res.user);
+            return init_notes_folder(res);
+        }
         init_service(response);
     }, "html");
 }
@@ -723,9 +729,8 @@ function init_service(response)
 }
 
 function init_notes(){
-    // 多用户时：
+    
     login(false);
-    // 单用户时使用：
-    //OSS.get_service(init_service);
+    
 }
 
